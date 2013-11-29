@@ -35,13 +35,13 @@ do
 	echo "[+] Beginning traceroutes ${count} of ${all} to ${ip}:${port}."
 	count=$((${count} + 1))
 
-	echo "[+] Running TCP traceroutes to ${ip}:${port}."
+	echo "[+] Running TCP traceroutes to ${ip}:${port} in the background."
 	timestamp "${filebase}_tcp"
-	traceroute -T -A -O ack -n -p $port $ip >> "${filebase}_tcp" 2>&1
+	traceroute -T -A -O ack -n -p $port $ip >> "${filebase}_tcp" 2>&1 &
 
-	echo "[+] Running ICMP traceroutes to ${ip}:${port}."
+	echo "[+] Running ICMP traceroutes to ${ip}:${port} in the background."
 	timestamp "${filebase}_icmp"
-	traceroute -I -A -n $ip >> "${filebase}_icmp" 2>&1
+	traceroute -I -A -n $ip >> "${filebase}_icmp" 2>&1 &
 
-	echo "[+] Wrote results to \"${filebase}_{tcp,icmp}\"."
+	echo "[+] Writing results to \"${filebase}_{tcp,icmp}\"."
 done
