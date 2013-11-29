@@ -5,7 +5,9 @@
 if [ "$#" -lt 1 ]
 then
 	echo
-	echo "Usage: $0 <relay_list>"
+	echo "Usage: $0 RELAY_LIST"
+	echo
+	echo "The file \"RELAY_LIST\" must contain one IP:port tuple on every line."
 	echo
 	exit 1
 fi
