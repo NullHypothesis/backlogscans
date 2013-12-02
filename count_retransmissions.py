@@ -10,6 +10,10 @@ from scapy.utils import rdpcap
 
 import sys
 
+if len(sys.argv) != 2:
+    print >> sys.stderr, "\nUsage: %s PCAP_FILE\n" % sys.argv[0]
+    exit(1)
+
 pkts=rdpcap(sys.argv[1])
 
 SYN=2
