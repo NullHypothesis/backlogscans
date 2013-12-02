@@ -49,7 +49,15 @@ for pkt in pkts:
 # Now sort the dictionary based on the timestamps.
 final = sorted(connections.items(), key=lambda x: x[1].syn.time)
 i=1
+syns = synacks = 0
 for (_, conn) in final:
     print "[%.4f] SYN segment #%d received %d SYN/ACKs." % \
           (conn.syn.time, i, len(conn.synAcks))
+    synacks += len(conn.synAcks)
+    syns += 1
     i += 1
+
+# Finally, print the overall statistics.
+print "Sent %d SYNs and received %d SYN/ACKs." % (syns, synacks)
+print "On average, we received %.3f SYN/ACKs for every SYN." % \
+      (0 if syns == 0 else float(synacks) / syns)
