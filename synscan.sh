@@ -32,7 +32,7 @@ else
 	output="$(mktemp '/tmp/synscan-XXXXXX.pcap')"
 fi
 
-echo "[+] Starting probing at: $(date)."
+echo "[+] Starting probing at: $(date -u)."
 echo "[+] Setting iptables rules to ignore RST segments."
 iptables -A OUTPUT -d ${ipaddress} -p tcp --tcp-flags RST RST -j DROP
 
