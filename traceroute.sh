@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013 by Philipp Winter <phw@nymity.ch>
+# Copyright 2013, 2014 Philipp Winter <phw@nymity.ch>
 
 if [ "$#" -lt 1 ]
 then
