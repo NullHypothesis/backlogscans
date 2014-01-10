@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013 by Philipp Winter <phw@nymity.ch>
+# Copyright 2013, 2014 Philipp Winter <phw@nymity.ch>
 #
 # This script probes a remote TCP service by sending a specific amount of TCP
 # SYN segments and capturing the replies it gets.  Note that it might require a
