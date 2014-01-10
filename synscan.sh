@@ -31,8 +31,6 @@ then
 else
 	output="$(mktemp '/tmp/synscan-XXXXXX.pcap')"
 fi
-echo $output
-exit 1
 
 echo "[+] Starting probing at: $(date)."
 echo "[+] Setting iptables rules to ignore RST segments."
