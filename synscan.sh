@@ -17,7 +17,7 @@ timeout=60
 if [ "$#" -lt 2 ]
 then
 	echo
-	echo "Usage: $0 <ip_address> <port>"
+	echo "Usage: $0 IP_ADDRESS PORT [OUTPUT]"
 	echo
 	exit 1
 fi
@@ -25,7 +25,14 @@ fi
 ipaddress="$1"
 port="$2"
 
-output="$(mktemp '/tmp/synscan-XXXXXX.pcap')"
+if [ ! -z "$3" ]
+then
+	output="$3"
+else
+	output="$(mktemp '/tmp/synscan-XXXXXX.pcap')"
+fi
+echo $output
+exit 1
 
 echo "[+] Starting probing at: $(date)."
 echo "[+] Setting iptables rules to ignore RST segments."
