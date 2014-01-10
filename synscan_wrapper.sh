@@ -45,7 +45,7 @@ else
 	ip=${array[0]}
 	port=${array[1]}
 	echo "[+] Running SYN scan for \"${ip}:${port}\" at $(date -u --rfc-3339=ns)."
-	"$script" "$ip" "$port" "${outputdir}/${relay}.pcap"
+	"$script" "$ip" "$port" "${outputdir}/${relay}_$(date -u '+%F_%T').pcap"
 
 	# Drain the first relay and write back the remaining relays.
 	echo "[+] Draining first relay from file \"${relays}\"."
