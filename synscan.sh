@@ -39,7 +39,7 @@ echo "[+] Setting iptables rules to ignore RST segments."
 iptables -A OUTPUT -d ${ipaddress} -p tcp --tcp-flags RST RST -j DROP
 
 echo "[+] Starting tcpdump to capture network data."
-tcpdump -n "host ${ipaddress}" -w "${output}" &
+tcpdump -i any -n "host ${ipaddress} and port ${port}" -w "${output}" &
 pid=$!
 sleep 1
 
