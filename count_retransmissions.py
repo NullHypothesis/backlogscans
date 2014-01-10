@@ -53,11 +53,14 @@ for pkt in pkts:
 # Now sort the dictionary based on the timestamps.
 final = sorted(connections.items(), key=lambda x: x[1].syn.time)
 i=1
-syns = synacks = 0
+syns = synacks = max_synacks = 0
 for (_, conn) in final:
+    lenSynAcks = len(conn.synAcks)
     print "[%.4f] SYN segment #%d received %d SYN/ACKs." % \
-          (conn.syn.time, i, len(conn.synAcks))
-    synacks += len(conn.synAcks)
+          (conn.syn.time, i, lenSynAcks)
+    synacks += lenSynAcks
+    if lenSynAcks == 6:
+        max_synacks += 1
     syns += 1
     i += 1
 
@@ -65,3 +68,5 @@ for (_, conn) in final:
 print "Sent %d SYNs and received %d SYN/ACKs." % (syns, synacks)
 print "On average, we received %.3f SYN/ACKs for every SYN." % \
       (0 if syns == 0 else float(synacks) / syns)
+print "For %d SYNs, we received 6 SYN/ACKs, i.e., the maximum amount of " \
+      "5 retransmissions." % max_synacks
