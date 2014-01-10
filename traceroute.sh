@@ -5,7 +5,7 @@
 if [ "$#" -lt 1 ]
 then
 	echo
-	echo "Usage: $0 RELAY_LIST"
+	echo "Usage: $0 RELAY_LIST [OUTPUT_DIR]"
 	echo
 	echo "The file \"RELAY_LIST\" must contain one IP:port tuple on every line."
 	echo
@@ -13,7 +13,18 @@ then
 fi
 
 relaylist="$1"
-outdir="$(mktemp -d '/tmp/traceroutes-XXXXXX')"
+# Check if optional argument is given.
+if [ ! -z "$2" ]
+then
+	outdir="$2"
+	if [ ! -d $outdir ]
+	then
+		echo "[+] Creating directory \"${outdir}\"."
+		mkdir $outdir
+	fi
+else
+	outdir="$(mktemp -d '/tmp/traceroutes-XXXXXX')"
+fi
 count=1
 all=$(wc -l $relaylist)
 all=(${all// / })
