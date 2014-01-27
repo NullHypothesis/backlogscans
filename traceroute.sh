@@ -20,7 +20,7 @@ then
 	if [ ! -d $outdir ]
 	then
 		echo "[+] Creating directory \"${outdir}\"."
-		mkdir $outdir
+		mkdir -p $outdir
 	fi
 else
 	outdir="$(mktemp -d '/tmp/traceroutes-XXXXXX')"
