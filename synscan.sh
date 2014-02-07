@@ -3,58 +3,65 @@
 # Copyright 2013, 2014 Philipp Winter <phw@nymity.ch>
 #
 # This script probes a remote TCP service by sending a specific amount of TCP
-# SYN segments and capturing the replies it gets.  Note that it might require a
-# modified version of hping3(1) as the tool has a global counter which is
+# SYN segments and capturing the replies it gets.  Note that it requires a
+# modified version of hping3(8) as the tool has a global counter which is
 # incremented with outgoing *and* incoming packets whereas we are only
 # interested in outgoing packets.
 
-# The amount of TCP SYNs which should be sent to the target.
-limit=200
+source log.sh
 
-# How long we should wait for SYN/ACKs after sending data.
+# The amount of TCP SYNs used to estimate the destination's backlog size.
+control_syns=10
+
+# How long we should wait for SYN/ACKs after sending data.  60 is a reasonable
+# value given 5 SYN/ACK retransmissions and exponential backoff in between
+# segments.
 timeout=60
 
 if [ "$#" -lt 2 ]
 then
 	echo
-	echo "Usage: $0 IP_ADDRESS PORT [OUTPUT]"
+	echo "Usage: $0 DST_ADDRESS DST_PORT [OUTPUT_FILE]"
 	echo
 	exit 1
 fi
 
-ipaddress="$1"
+dst_addr="$1"
 port="$2"
 
 if [ ! -z "$3" ]
 then
-	output="$3"
+	outfile="$3"
 else
-	output="$(mktemp '/tmp/synscan-XXXXXX.pcap')"
+	outfile="$(mktemp '/tmp/synscan-XXXXXX.pcap')"
 fi
 
-echo "[+] Starting probing at: $(date -u)."
-echo "[+] Setting iptables rules to ignore RST segments."
-iptables -A OUTPUT -d ${ipaddress} -p tcp --tcp-flags RST RST -j DROP
+log "Beginning SYN probing."
+log "Setting iptables rules to ignore RST segments."
+iptables -A OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
 
-echo "[+] Starting tcpdump to capture network data."
-tcpdump -i any -n "host ${ipaddress} and port ${port}" -w "${output}" &
+log "Invoking tcpdump(8) to capture network data."
+tcpdump -i any -n "host ${dst_addr} and port ${port}" -w "${outfile}" &
 pid=$!
-sleep 1
 
-echo "[+] Sending ${limit} TCP SYN segments to ${ipaddress}:${port}."
-hping3 -n -c $limit --fast -q -S -s 10000 -p ${port} ${ipaddress}
+# Give tcpdump some time to start.
+sleep 2
 
-echo "[+] Finished but waiting ${timeout}s for final SYN/ACKs to arrive."
+# 15,000 usec means ~66.7 SYNs a second.
+log "Sending ${control_syns} TCP SYN segments to ${dst_addr}:${port}."
+hping3-custom -n -c "$control_syns" -i u15000 -q -S -s 10000 -p ${port} ${dst_addr}
+
+log "Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
 
-echo "[+] Removing iptables rule."
-iptables -D OUTPUT -d ${ipaddress} -p tcp --tcp-flags RST RST -j DROP
+log "Removing iptables rule."
+iptables -D OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
 
-echo "[+] Terminating tcpdump."
+log "Terminating tcpdump."
 if [ ! -z "$pid" ]
 then
 	kill "$pid"
-	echo "[+] Sent SIGTERM to PID ${pid}."
+	log "Sent SIGTERM to PID ${pid}."
 fi
 
-echo "[+] Experimental results written to ${output}."
+log "Experimental results written to: ${outfile}"
