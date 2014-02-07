@@ -2,6 +2,8 @@
 #
 # Copyright 2014 Philipp Winter <phw@nymity.ch>
 
+source log.sh
+
 # The amount of (unspoofed) TCP SYNs used to estimate the destination's backlog
 # size.
 control_syns=5
@@ -34,33 +36,35 @@ else
 	outfile="$(mktemp '/tmp/rstscan-XXXXXX.pcap')"
 fi
 
-echo "[+] Beginning RST probing at: $(date -u --rfc-3339=ns)."
-echo "[+] Setting iptables rules to ignore RST segments."
-iptables -A OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
+log "Beginning RST probing."
+log "Setting iptables rules to ignore RST segments."
+iptables -A OUTPUT -d "${dst_addr}" -p tcp --tcp-flags RST RST -j DROP
 
-echo "[+] Invoking tcpdump(8) to capture network data."
-tcpdump -i any -n "host ${dst_addr} and portrange 10000-10005" -w "${outfile}" &
+log "Invoking tcpdump(8) to capture network data."
+tcpdump -i any -n "host ${dst_addr} and portrange 20000-20005" -w "${outfile}" &
 pid=$!
-sleep 1
 
-echo "[+] Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
-hping3-custom -n -c $control_syns -i u15000 -q -S -s 10000 -p ${port} ${dst_addr}
+# Give tcpdump some time to start.
+sleep 2
+
+log "Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
+hping3-custom -n -c $control_syns -i u15000 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
 
 # 15,000 usec means ~66.7 SYNs a second.
-echo "[+] Sending ${spoofed_syns} spoofed TCP SYN segments to ${spoofed_addr}."
-hping3-custom -n -c $spoofed_syns -a $spoofed_addr -i u15000 -q -S -s 20000 -p ${port} ${dst_addr}
+log "Sending ${spoofed_syns} spoofed TCP SYN segments to ${spoofed_addr}."
+hping3-custom -n -c $spoofed_syns -a $spoofed_addr -i u15000 -q -S -L 0 -s 30000 -p ${port} ${dst_addr}
 
-echo "[+] Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
+log "Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
 
-echo "[+] Removing iptables rule."
+log "Removing iptables rule."
 iptables -D OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
 
-echo "[+] Terminating tcpdump."
+log "Terminating tcpdump."
 if [ ! -z "$pid" ]
 then
 	kill "$pid"
-	echo "[+] Sent SIGTERM to tcpdump's PID ${pid}."
+	log "Sent SIGTERM to tcpdump's PID ${pid}."
 fi
 
-echo "[+] Experimental results written to: ${outfile}"
+log "Experimental results written to: ${outfile}"
