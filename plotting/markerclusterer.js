@@ -81,6 +81,9 @@ function MarkerClusterer(map, opt_markers, opt_options) {
 
   this.sizes = [53, 56, 66, 78, 90];
 
+  // Map a source marker's position to the destination cluster.
+  this.lookup_ = {};
+
   /**
    * @private
    */
@@ -407,10 +410,12 @@ MarkerClusterer.prototype.addMarkers = function(markers, opt_nodraw) {
   if (markers.length) {
     for (var i = 0, marker; marker = markers[i]; i++) {
       this.pushMarkerTo_(marker);
+      this.pushMarkerTo_(marker.dst);
     }
   } else if (Object.keys(markers).length) {
     for (var marker in markers) {
       this.pushMarkerTo_(markers[marker]);
+      this.pushMarkerTo_(markers[marker.dst]);
     }
   }
   if (!opt_nodraw) {
@@ -679,6 +684,10 @@ MarkerClusterer.prototype.clearMarkers = function() {
 MarkerClusterer.prototype.resetViewport = function(opt_hide) {
   // Remove all the clusters
   for (var i = 0, cluster; cluster = this.clusters_[i]; i++) {
+    // Remove all the paths.
+    for (var coordinates in cluster.paths_) {
+        cluster.paths_[coordinates].setMap(null);
+    }
     cluster.remove();
   }
 
@@ -769,9 +778,11 @@ MarkerClusterer.prototype.addToClosestCluster_ = function(marker) {
 
   if (clusterToAddTo && clusterToAddTo.isMarkerInClusterBounds(marker)) {
     clusterToAddTo.addMarker(marker);
+    this.lookup_[marker.getPosition()] = clusterToAddTo;
   } else {
     var cluster = new Cluster(this);
     cluster.addMarker(marker);
+    this.lookup_[marker.getPosition()] = cluster;
     this.clusters_.push(cluster);
   }
 };
@@ -798,6 +809,51 @@ MarkerClusterer.prototype.createClusters_ = function() {
       this.addToClosestCluster_(marker);
     }
   }
+
+  for (var i = 0, cluster; cluster = this.clusters_[i]; i++) {
+
+    for (var coordinates in cluster.paths_) {
+        cluster.paths_[coordinates].setMap(null);
+        delete cluster.paths_[coordinates];
+    }
+  }
+
+  console.log("There are " + this.markers_.length + " markers.");
+  console.log("There are " + Object.keys(this.lookup_).length + " lookups.");
+
+  for (var i = 0, marker; marker = this.markers_[i]; i++) {
+      var srcCluster = this.lookup_[marker.getPosition()];
+      if (!marker.dst) {
+          continue; // Scan destination.
+      }
+      var dstCluster = this.lookup_[marker.dst.getPosition()];
+      if (!dstCluster || !srcCluster) {
+          continue;
+      }
+      var coordinates = [ srcCluster.center_, dstCluster.center_, ];
+
+      //if (!srcCluster.paths_){
+       //   srcCluster.paths_ = {};
+     // }
+
+      // If the path already exists, we increase the path width...
+      if (srcCluster.paths_[coordinates]) {
+          weight = srcCluster.paths_[coordinates].strokeWeight;
+          srcCluster.paths_[coordinates].setOptions({strokeWeight: weight + 0.02});
+      // ...otherwise, we draw a new path.
+      } else {
+        var path = new google.maps.Polyline({
+          clickable: false,
+          geodesic: true,
+          path: coordinates,
+          strokeColor: "#FF0000",
+          strokeOpacity: 0.3,
+          strokeWeight: 1
+        });
+        path.setMap(this.map_);
+        srcCluster.paths_[coordinates] = path;
+      }
+  }
 };
 
 
@@ -816,6 +872,7 @@ function Cluster(markerClusterer) {
   this.minClusterSize_ = markerClusterer.getMinClusterSize();
   this.averageCenter_ = markerClusterer.isAverageCenter();
   this.center_ = null;
+  this.paths_ = {};
   this.markers_ = [];
   this.bounds_ = null;
   this.clusterIcon_ = new ClusterIcon(this, markerClusterer.getStyles(),
@@ -923,6 +980,7 @@ Cluster.prototype.remove = function() {
   this.clusterIcon_.remove();
   this.markers_.length = 0;
   delete this.markers_;
+  //delete this.paths_;
 };
 
 
