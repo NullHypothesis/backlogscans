@@ -3,6 +3,7 @@
 # Copyright 2014 Philipp Winter <phw@nymity.ch>
 
 source log.sh
+source config.sh
 
 # The amount of (unspoofed) TCP SYNs used to estimate the destination's backlog
 # size.
@@ -12,10 +13,20 @@ control_syns=5
 # backlog more than 50%.
 spoofed_syns=150
 
-# How long we should wait for SYN/ACKs after sending data.  60 is a reasonable
+# How long we should wait for SYN/ACKs after sending data.  65 is a reasonable
 # value given 5 SYN/ACK retransmissions and exponential backoff in between
-# segments.
-timeout=60
+# segments.  After 65 seconds, our SYNs should no longer be in the destinations
+# backlog.
+timeout=65
+
+# This experiment can be run by the uncensored machine without assistance of
+# the censored machine.  For synchronisation, we use sleep calls instead.
+if [ $prober_type = "censored" ]
+then
+	sleep "$timeout"
+	sleep 2
+	exit 0
+fi
 
 if [ "$#" -lt 3 ]
 then
