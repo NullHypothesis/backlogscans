@@ -9,9 +9,15 @@
 # interested in outgoing packets.
 
 source log.sh
+source config.sh
 
 # The amount of TCP SYNs used to estimate the destination's backlog size.
-control_syns=10
+if [ $prober_type = "censored" ]
+then
+	control_syns=134
+elif
+	control_syns=10
+fi
 
 # How long we should wait for SYN/ACKs after sending data.  65 is a reasonable
 # value given 5 SYN/ACK retransmissions and exponential backoff in between
