@@ -13,10 +13,11 @@ source log.sh
 # The amount of TCP SYNs used to estimate the destination's backlog size.
 control_syns=10
 
-# How long we should wait for SYN/ACKs after sending data.  60 is a reasonable
+# How long we should wait for SYN/ACKs after sending data.  65 is a reasonable
 # value given 5 SYN/ACK retransmissions and exponential backoff in between
-# segments.
-timeout=60
+# segments.  After 65 seconds, our SYNs should no longer be in the destinations
+# backlog.
+timeout=65
 
 if [ "$#" -lt 2 ]
 then
