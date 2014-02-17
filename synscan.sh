@@ -15,7 +15,7 @@ source config.sh
 if [ $prober_type = "censored" ]
 then
 	control_syns=134
-elif
+else
 	control_syns=10
 fi
 
