@@ -42,7 +42,7 @@ sleep 5
 
 
 log "2. Running SYN scan to determine if SYN or SYN/ACK segments are dropped."
-"$synscan" "$ip_addr" "$port" "${outdir}/$(date -u +'%F.%T')_synscan.pcap" &
+"$synscan" "$ip_addr" "$port" "${outdir}/$(date -u +'%F.%T')_synscan.pcap"
 
 
 if [ $prober_type = "censored" ]
@@ -55,7 +55,7 @@ sleep 5
 
 
 log "4. Running RST scan to determine if RST segments are dropped."
-"$rstscan" "$ip_addr" "$port" "$spoofed_addr" "${outdir}/$(date -u +'%F.%T')_rstscan.pcap" &
+"$rstscan" "$ip_addr" "$port" "$spoofed_addr" "${outdir}/$(date -u +'%F.%T')_rstscan.pcap"
 
 
 if [ $prober_type = "censored" ]
@@ -64,4 +64,4 @@ then
 	"$traceroute" "$ip_addr" "$port" "$outdir"
 fi
 
-sleep 10
+sleep 5
