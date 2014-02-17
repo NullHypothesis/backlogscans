@@ -7,14 +7,13 @@
 # censored machine behind the GFW.
 
 source log.sh
+source config.sh
 
 PATH=$PATH:"."
 
 traceroute="traceroute_host.sh"
 synscan="synscan.sh"
 rstscan="rstscan.sh"
-#spoofed_addr="1.93.36.159"
-spoofed_addr="130.243.26.55"
 
 if [ "$#" -ne 3 ]
 then
@@ -30,23 +29,39 @@ outdir="$3"
 
 log "0. Now probing host ${ip_addr}:${port}."
 
-log "1. Running TCP and ICMP-based traceroutes to ${ip_addr}:${port}."
-"$traceroute" "$ip_addr" "$port" "$outdir" &
+# Traceroutes are only run by the censored machine.  We want to make sure that
+# the route doesn't change during the scan.  To be (reasonably) sure, we run
+# traceroutes before, during, and after the scan.
+if [ $prober_type = "censored" ]
+then
+	log "1. Running TCP and ICMP-based traceroutes to ${ip_addr}:${port}."
+	"$traceroute" "$ip_addr" "$port" "$outdir" &
+fi
 
 sleep 5
+
 
 log "2. Running SYN scan to determine if SYN or SYN/ACK segments are dropped."
 "$synscan" "$ip_addr" "$port" "${outdir}/$(date -u +'%F.%T')_synscan.pcap" &
 
-log "3. Running TCP and ICMP-based traceroutes to ${ip_addr}:${port}."
-"$traceroute" "$ip_addr" "$port" "$outdir" &
+
+if [ $prober_type = "censored" ]
+then
+	log "3. Running TCP and ICMP-based traceroutes to ${ip_addr}:${port}."
+	"$traceroute" "$ip_addr" "$port" "$outdir" &
+fi
 
 sleep 5
+
 
 log "4. Running RST scan to determine if RST segments are dropped."
 "$rstscan" "$ip_addr" "$port" "$spoofed_addr" "${outdir}/$(date -u +'%F.%T')_rstscan.pcap" &
 
-log "5. Running TCP and ICMP-based traceroutes to ${ip_addr}${port}."
-"$traceroute" "$ip_addr" "$port" "$outdir"
+
+if [ $prober_type = "censored" ]
+then
+	log "5. Running TCP and ICMP-based traceroutes to ${ip_addr}${port}."
+	"$traceroute" "$ip_addr" "$port" "$outdir"
+fi
 
 sleep 10
