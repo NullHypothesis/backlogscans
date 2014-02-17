@@ -2,8 +2,9 @@
 #
 # Copyright 2014 Philipp Winter <phw@nymity.ch>
 #
-# wrapper script manages a list of relays and invokes this script for every
-# ip:port tuple.
+# Probes a given host using traceroutes, SYN scans and RST scans.  All data is
+# written to the given directory.  Probing should happen in sync with the
+# censored machine behind the GFW.
 
 source log.sh
 
