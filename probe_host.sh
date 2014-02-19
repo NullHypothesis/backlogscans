@@ -61,7 +61,7 @@ log "4. Running RST scan to determine if RST segments are dropped."
 if [ $prober_type = "censored" ]
 then
 	log "5. Running TCP and ICMP-based traceroutes to ${ip_addr}${port}."
-	"$traceroute" "$ip_addr" "$port" "$outdir"
+	"$traceroute" "$ip_addr" "$port" "$outdir" &
 fi
 
 sleep 5
