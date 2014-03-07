@@ -38,10 +38,10 @@ filebase="${outdir}/$(date -u +'%F.%T')_traceroute"
 
 log "Running TCP traceroute to ${ip_addr}:${port} in the background."
 timestamp "${filebase}_tcp"
-timeout 5 traceroute -T -A -O ack -n -w 3 -p $port $ip_addr >> "${filebase}_tcp" 2>&1 &
+timeout 10 traceroute -T -O ack -n -w 3 -p $port $ip_addr >> "${filebase}_tcp" 2>&1 &
 
 log "Running ICMP traceroute to ${ip_addr} in the background."
 timestamp "${filebase}_icmp"
-timeout 5 traceroute -I -A -n -w 3 $ip_addr >> "${filebase}_icmp" 2>&1 &
+timeout 10 traceroute -I -n -w 3 $ip_addr >> "${filebase}_icmp" 2>&1 &
 
 log "Writing results to \"${filebase}_{tcp,icmp}\"."
