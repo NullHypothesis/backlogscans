@@ -7,26 +7,17 @@ source config.sh
 
 # The amount of (unspoofed) TCP SYNs used to estimate the destination's backlog
 # size.
-control_syns=5
+control_syns=10
 
 # The amount of spoofed TCP SYNs which are sent to fill the destination's SYN
 # backlog more than 50%.
-spoofed_syns=150
+spoofed_syns=134
 
 # How long we should wait for SYN/ACKs after sending data.  65 is a reasonable
 # value given 5 SYN/ACK retransmissions and exponential backoff in between
 # segments.  After 65 seconds, our SYNs should no longer be in the destinations
 # backlog.
 timeout=65
-
-# This experiment can be run by the uncensored machine without assistance of
-# the censored machine.  For synchronisation, we use sleep calls instead.
-if [ $prober_type = "censored" ]
-then
-	sleep "$timeout"
-	sleep 2
-	exit 0
-fi
 
 if [ "$#" -lt 3 ]
 then
@@ -45,6 +36,29 @@ then
 	outfile="$4"
 else
 	outfile="$(mktemp '/tmp/rstscan-XXXXXX.pcap')"
+fi
+
+# This experiment can be run by the uncensored machine without assistance of
+# the censored machine.  For synchronisation, we use sleep calls instead.  We
+# do capture the network traffic, however.
+if [ $prober_type = "censored" ]
+then
+	log "Invoking tcpdump(8) to capture network data."
+	tcpdump -i any -n "host ${dst_addr} and port ${port}" -w "${outfile}" &
+	pid=$!
+
+	sleep "$timeout"
+	sleep 2
+
+	log "Terminating tcpdump."
+	if [ ! -z "$pid" ]
+	then
+		kill "$pid"
+		log "Sent SIGTERM to tcpdump's PID ${pid}."
+	fi
+	log "Experimental results written to: ${outfile}"
+
+	exit 0
 fi
 
 log "Beginning RST probing."
