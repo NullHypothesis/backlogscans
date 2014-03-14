@@ -11,7 +11,7 @@ control_syns=10
 
 # The amount of spoofed TCP SYNs which are sent to fill the destination's SYN
 # backlog more than 50%.
-spoofed_syns=134
+spoofed_syns=145
 
 # How long we should wait for SYN/ACKs after sending data.  65 is a reasonable
 # value given 5 SYN/ACK retransmissions and exponential backoff in between
@@ -73,11 +73,11 @@ pid=$!
 sleep 2
 
 log "Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
-timeout 5 hping3-custom -n -c $control_syns -i u15000 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
+timeout 5 hping3-custom -n -c $control_syns -i u13000 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
 
 # 15,000 usec means ~66.7 SYNs a second.
 log "Sending ${spoofed_syns} spoofed TCP SYN segments to ${spoofed_addr}."
-timeout 5 hping3-custom -n -c $spoofed_syns -a $spoofed_addr -i u15000 -q -S -L 0 -s 30000 -p ${port} ${dst_addr} &
+timeout 5 hping3-custom -n -c $spoofed_syns -a $spoofed_addr -i u13000 -q -S -L 0 -s 30000 -p ${port} ${dst_addr} &
 
 log "Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
