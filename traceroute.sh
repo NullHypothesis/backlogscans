@@ -2,6 +2,8 @@
 #
 # Copyright 2013, 2014 Philipp Winter <phw@nymity.ch>
 
+source log.sh
+
 if [ "$#" -lt 1 ]
 then
 	echo
@@ -19,7 +21,7 @@ then
 	outdir="$2"
 	if [ ! -d $outdir ]
 	then
-		echo "[+] Creating directory \"${outdir}\"."
+		log "Creating directory \"${outdir}\"."
 		mkdir -p $outdir
 	fi
 else
@@ -41,18 +43,20 @@ do
 	tuple=(${relay//:/ })
 	ip=${tuple[0]}
 	port=${tuple[1]}
-	filebase="${outdir}/${ip}:${port}"
+	mkdir -p "${outdir}/${ip}:${port}"
 
-	echo "[+] Beginning traceroutes ${count} of ${all} to ${ip}:${port}."
+	filebase="${outdir}/${ip}:${port}/$(date -u +'%F.%T')_traceroute_nontor"
+
+	log "Beginning traceroutes ${count} of ${all} to ${ip}:${port}."
 	count=$((${count} + 1))
 
-	echo "[+] Running TCP traceroutes to ${ip}:${port} in the background."
+	log "Running TCP traceroutes to ${ip}:${port} in the background."
 	timestamp "${filebase}_tcp"
-	traceroute -T -A -O ack -n -w 3 -p $port $ip >> "${filebase}_tcp" 2>&1 &
+	traceroute -T -O ack -n -w 3 -p $port $ip >> "${filebase}_tcp" 2>&1 &
 
-	echo "[+] Running ICMP traceroutes to ${ip}:${port} in the background."
+	log "Running ICMP traceroutes to ${ip}:${port} in the background."
 	timestamp "${filebase}_icmp"
-	traceroute -I -A -n -w 3 $ip >> "${filebase}_icmp" 2>&1 &
+	traceroute -I -n -w 3 $ip >> "${filebase}_icmp" 2>&1 &
 
-	echo "[+] Writing results to \"${filebase}_{tcp,icmp}\"."
+	log "Writing results to \"${filebase}_{tcp,icmp}\"."
 done
