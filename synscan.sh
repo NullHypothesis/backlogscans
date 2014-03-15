@@ -59,7 +59,15 @@ log "Sending ${control_syns} TCP SYN segments to ${dst_addr}:${port} in the back
 timeout 5 hping3-custom -n -c "$control_syns" -i u13000 -q -S -s 10000 -p ${port} ${dst_addr} &
 
 log "Now waiting ${timeout}s for final SYN/ACKs to arrive."
-sleep "$timeout"
+if [ $prober_type = "censored" ]
+then
+	sleep "$timeout"
+else
+	sleep 2
+	log "Sending 3 control SYNs to estimate destination's original backlog size."
+	timeout 5 hping3-custom -n -c 3 -i u13000 -q -S -s 20000 -p ${port} ${dst_addr} &
+	sleep "$(($timeout - 2))"
+fi
 
 log "Removing iptables rule."
 iptables -D OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
