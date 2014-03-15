@@ -14,7 +14,7 @@ source config.sh
 # The amount of TCP SYNs used to estimate the destination's backlog size.
 if [ $prober_type = "censored" ]
 then
-	control_syns=134
+	control_syns=145
 else
 	control_syns=10
 fi
@@ -56,7 +56,7 @@ sleep 2
 
 # 15,000 usec means ~66.7 SYNs a second.
 log "Sending ${control_syns} TCP SYN segments to ${dst_addr}:${port} in the background."
-timeout 5 hping3-custom -n -c "$control_syns" -i u15000 -q -S -s 10000 -p ${port} ${dst_addr} &
+timeout 5 hping3-custom -n -c "$control_syns" -i u13000 -q -S -s 10000 -p ${port} ${dst_addr} &
 
 log "Now waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
