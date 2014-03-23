@@ -9,9 +9,9 @@ source config.sh
 # size.
 control_syns=10
 
-# The amount of spoofed TCP SYNs which are sent to fill the destination's SYN
-# backlog more than 50%.
-spoofed_syns=145
+# The amount of TCP SYNs which are sent to fill the destination's SYN backlog
+# more than 50%.
+probing_syns=145
 
 # How long we should wait for SYN/ACKs after sending data.  65 is a reasonable
 # value given 5 SYN/ACK retransmissions and exponential backoff in between
@@ -38,52 +38,38 @@ else
 	outfile="$(mktemp '/tmp/rstscan-XXXXXX.pcap')"
 fi
 
-# This experiment can be run by the uncensored machine without assistance of
-# the censored machine.  For synchronisation, we use sleep calls instead.  We
-# do capture the network traffic, however.
-if [ $prober_type = "censored" ]
-then
-	log "Invoking tcpdump(8) to capture network data."
-	tcpdump -i any -n "host ${dst_addr} and port ${port}" -w "${outfile}" &
-	pid=$!
-
-	sleep "$timeout"
-	sleep 2
-
-	log "Terminating tcpdump."
-	if [ ! -z "$pid" ]
-	then
-		kill "$pid"
-		log "Sent SIGTERM to tcpdump's PID ${pid}."
-	fi
-	log "Experimental results written to: ${outfile}"
-
-	exit 0
-fi
-
 log "Beginning RST probing."
-log "Setting iptables rules to ignore RST segments."
-iptables -A OUTPUT -d "${dst_addr}" -p tcp --tcp-flags RST RST -j DROP
 
 log "Invoking tcpdump(8) to capture network data."
-tcpdump -i any -n "host ${dst_addr} and portrange 20000-20005" -w "${outfile}" &
+tcpdump -i any -n "host ${dst_addr}" -w "${outfile}" &
 pid=$!
 
 # Give tcpdump some time to start.
 sleep 2
 
-log "Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
-timeout 5 hping3-custom -n -c $control_syns -i u13000 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
+if [ $prober_type = "uncensored" ]
+then
+	log "Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
+	timeout 5 hping3-custom -n -c $control_syns -i u13000 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
 
-# 15,000 usec means ~66.7 SYNs a second.
-log "Sending ${spoofed_syns} spoofed TCP SYN segments to ${spoofed_addr}."
-timeout 5 hping3-custom -n -c $spoofed_syns -a $spoofed_addr -i u13000 -q -S -L 0 -s 30000 -p ${port} ${dst_addr} &
+	# 15,000 usec means ~66.7 SYNs a second.
+	log "Sending ${probing_syns} spoofed TCP SYN segments to ${dst_addr}."
+	timeout 5 hping3-custom -n -c $probing_syns -a $spoofed_addr -i u13000 -q -S -L 0 -M 1000000 -s 30000 -p ${port} ${dst_addr} &
+else
+	# 15,000 usec means ~66.7 SYNs a second.
+	log "Sending ${probing_syns} TCP SYN segments to ${dst_addr}."
+	timeout 5 hping3-custom -n -c $probing_syns -i u13000 -q -S -L 0 -M 1000000 -s 30000 -p ${port} ${dst_addr} &
+
+	# Wait a while to have some certainty that the SYNs made it to the target.
+	sleep 1
+
+	# Send RSTs which should reach the destination even though SYN/ACKs are blocked.
+	log "Sending ${probing_syns} TCP RST segments to ${dst_addr}."
+	timeout 5 hping3-custom -n -c $probing_syns -i u13000 -q -R -L 0 -M 1000001 -s 30000 -p ${port} ${dst_addr} &
+fi
 
 log "Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
-
-log "Removing iptables rule."
-iptables -D OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
 
 log "Terminating tcpdump."
 if [ ! -z "$pid" ]
