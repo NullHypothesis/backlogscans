@@ -49,6 +49,9 @@ sleep 2
 
 if [ $prober_type = "uncensored" ]
 then
+	log "Setting iptables rules to ignore RST segments."
+	iptables -A OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
+
 	log "Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
 	timeout 5 hping3-custom -n -c $control_syns -i u13000 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
 
@@ -70,6 +73,11 @@ fi
 
 log "Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
+
+if [ $prober_type = "uncensored" ]
+	log "Removing iptables rule."
+	iptables -D OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
+fi
 
 log "Terminating tcpdump."
 if [ ! -z "$pid" ]
