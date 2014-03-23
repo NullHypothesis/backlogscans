@@ -75,6 +75,7 @@ log "Done transmitting but waiting ${timeout}s for final SYN/ACKs to arrive."
 sleep "$timeout"
 
 if [ $prober_type = "uncensored" ]
+then
 	log "Removing iptables rule."
 	iptables -D OUTPUT -d ${dst_addr} -p tcp --tcp-flags RST RST -j DROP
 fi
