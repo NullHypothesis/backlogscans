@@ -55,6 +55,9 @@ then
 	log "Sending ${control_syns} control TCP SYN segments to ${dst_addr}:${port}."
 	timeout 5 hping3-custom -n -c $control_syns -i u1300 -q -S -L 0 -s 20000 -p ${port} ${dst_addr} &
 
+	# VPS must start sending SYNs before us.
+	sleep 1
+
 	# 6,000 usec means ~166.6 SYNs a second.
 	log "Sending ${probing_syns} spoofed TCP SYN segments to ${dst_addr}."
 	timeout 5 hping3-custom -n -c $probing_syns -a $spoofed_addr -i u6000 -q -S -L 0 -M 1000000 -s 30000 -p ${port} ${dst_addr} &
@@ -64,7 +67,7 @@ else
 	timeout 5 hping3-custom -n -c $probing_syns -i u6000 -q -S -L 0 -M 1000000 -s 30000 -p ${port} ${dst_addr} &
 
 	# Wait a while to have some certainty that the SYNs made it to the target.
-	sleep 1.5
+	sleep 2
 
 	# Send RSTs which should reach the destination even though SYN/ACKs are blocked.
 	log "Sending ${probing_syns} TCP RST segments to ${dst_addr}."
