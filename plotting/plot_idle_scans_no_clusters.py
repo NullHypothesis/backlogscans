@@ -33,7 +33,8 @@ class Machine( object ):
 
     """Represents a machine which is part of a scan."""
 
-    def __init__( self, ip_addr, latitude, longitude, region, machine_type ):
+    def __init__( self, ip_addr, latitude, longitude, region=None,
+                  machine_type=None ):
 
         self.ip_addr = ip_addr
         self.latitude = latitude
@@ -76,6 +77,55 @@ class Scan( object ):
                                                self.src_host,
                                                self.dst_host)
         return s
+
+class Cluster( object ):
+
+    def __init__( self, cluster ):
+
+        self.cluster = cluster
+        self.machines = []
+
+    def add_machine( self, machine ):
+
+        self.machines.append(machine)
+
+    def __str__( self ):
+
+        return self.cluster + "\n\t" + \
+               "\n\t".join([str(m) for m in self.machines])
+
+def print_clusters( clusters, file_name ):
+    """
+    Analyse all clusters and write a map to the given file.
+    """
+
+    # arg1: start latitude
+    # arg2: start longitude
+    # arg3: default zoom level (must be in {0..20})
+
+    my_map = pygmaps.maps(0, 0, 2)
+
+    # First, parse all scans and create dictionaries for the markers/points as
+    # well as paths.
+
+    colors = ["#%06x" % (0xffffff / (5 * i)) for i in range(1, len(clusters)+1)]
+
+    for cluster in clusters:
+
+        points = {}
+
+        # Determine cluster color.
+
+        color = colors.pop(0)
+
+        for machine in cluster.machines:
+            points[machine.get_coordinates()] = 1
+
+        for latitude, longitude in points:
+            my_map.addpoint(latitude, longitude, color)
+
+    print "Writing output to \"%s\"." % file_name
+    my_map.draw(file_name)
 
 def print_map( scans, file_name ):
     """
@@ -178,6 +228,31 @@ def parse_file( file_name ):
 
     return scans
 
+def parse_clusters( file_name ):
+    """
+    Read the entire given file and create cluster objects out of the data.
+    """
+
+    clusters = []
+    fd = open(file_name, 'r')
+
+    while True:
+        line = fd.readline()
+        if not line:
+            break
+
+        # Format: <cluster>, <ip1>, <lat1>, <lon1>, ..., <ipn>, <latn>, <lonn>
+
+        elems = [elem.strip() for elem in line.split(',')]
+        cluster = Cluster(elems.pop(0))
+
+        for i in xrange(0, len(elems), 3):
+            cluster.add_machine(Machine(elems.pop(0), float(elems.pop(0)),
+                                                      float(elems.pop(0))))
+        clusters.append(cluster)
+
+    return clusters
+
 def parse_arguments( args ):
 
     parser = argparse.ArgumentParser(description="Plot and filter idle "
@@ -213,6 +288,10 @@ def parse_arguments( args ):
                         help="Only display search result without printing "
                              "HTML/JavaScript.  Useful for manual analysis.")
 
+    parser.add_argument("-c", "--cluster",
+                        action="store_true",
+                        help="Create cluster from IP address file.")
+
     return parser.parse_args()
 
 def main( ):
@@ -223,6 +302,12 @@ def main( ):
     args = parse_arguments(sys.argv[0:])
 
     logger.debug("Parsing file `%s'." % args.datafile)
+
+    if args.cluster:
+        logger.debug("Attempting to create IP address clusters.")
+        clusters = parse_clusters(args.datafile)
+        print_clusters(clusters, args.write)
+        return 0
 
     scans = parse_file(args.datafile)
 
