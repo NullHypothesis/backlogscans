@@ -118,11 +118,18 @@ def print_clusters( clusters, file_name ):
 
         color = colors.pop(0)
 
+        # points key=coordinates, value=ip address(es)
+
         for machine in cluster.machines:
-            points[machine.get_coordinates()] = 1
+            if points.has_key(machine.get_coordinates()):
+                points[machine.get_coordinates()].append(machine.ip_addr)
+            else:
+                points[machine.get_coordinates()] = [machine.ip_addr]
 
         for latitude, longitude in points:
-            my_map.addpoint(latitude, longitude, color)
+            my_map.addpoint(latitude, longitude,
+                            color=color,
+                            title=",".join(points[(latitude, longitude)]))
 
     print "Writing output to \"%s\"." % file_name
     my_map.draw(file_name)
@@ -182,7 +189,7 @@ def print_map( scans, file_name ):
     for latitude, longitude in points:
 
         icon_path = icon_paths[points[(latitude, longitude)]]
-        my_map.addpoint(latitude, longitude, "#FFFFFF", icon_path)
+        my_map.addpoint(latitude, longitude, "#FFFFFF", icon=icon_path)
 
     # Finally, plot the paths between the points.  Again, depending on the scan
     # verdict, we plot the path in different colours.
