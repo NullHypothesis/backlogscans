@@ -130,8 +130,9 @@ class maps:
         f.write('\t\tvar img = new google.maps.MarkerImage(\'%s\');\n' % (self.coloricon.replace('XXXXXX',color)))
         f.write('\t\tvar marker = new google.maps.Marker({\n')
         f.write('\t\ttitle: "no implimentation",\n')
-        #f.write('\t\ticon: img,\n')
-        f.write('\t\ticon: "icons/%s",\n' % icon)
+        f.write('\t\ticon: img,\n')
+        if icon:
+            f.write('\t\ticon: "icons/%s",\n' % icon)
         f.write('\t\tposition: latlng\n')
         f.write('\t\t});\n')
         f.write('\t\tmarker.setMap(map);\n')
