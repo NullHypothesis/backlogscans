@@ -1,7 +1,7 @@
 
 import csv
 
-def get_lat_long(IP):
+def get_lat_long(loc_data,IP):
 	loc_data = list( csv.DictReader( open(loc_data, 'rb'), fieldnames = ['ip', 'lat', 'lon', 're', 'ipt'], delimiter = ',', quotechar = '"', skipinitialspace=True) )
 
 	for lats in loc_data:
