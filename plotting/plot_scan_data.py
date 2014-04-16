@@ -23,9 +23,9 @@ logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 icon_paths = {
-    1: "source_icon.png",      # Source.
-    2: "destination_icon.png", # Destination.
-    3: "hybrid_icon.png"       # Hybrid (source and destination).
+    1: "https://raw.githubusercontent.com/NullHypothesis/tcpscans/master/plotting/icons/source_icon.png",
+    2: "https://raw.githubusercontent.com/NullHypothesis/tcpscans/master/plotting/icons/destination_icon.png",
+    3: "https://raw.githubusercontent.com/NullHypothesis/tcpscans/master/plotting/icons/hybrid_icon.png"
 }
 
 path_colours = {

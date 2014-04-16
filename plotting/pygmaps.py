@@ -132,7 +132,7 @@ class maps:
         f.write('\t\ttitle: "%s",\n' % title)
         f.write('\t\ticon: img,\n')
         if icon:
-            f.write('\t\ticon: "icons/%s",\n' % icon)
+            f.write('\t\ticon: "%s",\n' % icon)
         f.write('\t\tposition: latlng\n')
         f.write('\t\t});\n')
         f.write('\t\tmarker.setMap(map);\n')
