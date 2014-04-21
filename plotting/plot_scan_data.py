@@ -420,6 +420,9 @@ def main( ):
     # Create cluster-specific scan maps.  Every scan in all scan maps contains
     # an IP address which is part of a cluster.
 
+    if not args.cluster:
+        return 0
+
     for cluster in clusters:
 
         cluster_scans = []
