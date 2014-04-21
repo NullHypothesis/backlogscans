@@ -54,39 +54,32 @@ def extract_connections( pkts ):
 
     return connections
 
-def has_exponential_backoff( connections ):
+def has_exponential_backoff( connection ):
     """
-    Check if all connections used exponential backoff for retransmissions.
+    Check if the given connection used exponential backoff for retransmissions.
     """
 
-    backoff_model = (
-        (0, 1),
-        (1, 2),
-        (3, 4),
-        (7, 8),
-        (15, 16),
-        (31, 32)
-    )
+    backoff_model = ((0, 1.125), (1, 2.27), (3, 4.5), (7, 9), (15, 17), (31, 33))
 
     backoffs = []
 
-    for conn in connections.values():
+    start_time = connection.syn.time
 
-        start_time = conn.syn.time
+    good = True
 
-        for syn_ack in conn.syn_acks:
+    # Iterate over all SYN/ACKs inside a connection.
+    for syn_ack in connection.syn_acks:
+
+        time_diff = syn_ack.time - start_time
+        backoffs.append(time_diff)
+
+        fit = [upper <= time_diff <= lower for upper, lower in backoff_model]
+        if not sum(fit):
             good = False
-            t = syn_ack.time - start_time
-            backoffs.append(t)
 
-            for upper, lower in backoff_model:
-                if upper < t < lower:
-                    good = True
-                    break
-
-            if not good:
-                print backoffs
-                return False
+    if not good:
+        print backoffs
+        return False
 
     return True
 
@@ -169,8 +162,9 @@ def process_file( file_name ):
 
     orig_retrans, scan_retrans = extract_retransmissions(connections)
 
-    if not has_exponential_backoff(connections):
-        print "Connections don't follow exponential backoff."
+    for connection in connections.values():
+        if not has_exponential_backoff(connection):
+            print "Connections don't follow exponential backoff."
 
     analyse_retransmissions(orig_retrans, scan_retrans)
 
