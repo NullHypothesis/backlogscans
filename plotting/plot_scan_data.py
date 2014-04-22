@@ -317,6 +317,10 @@ def parse_arguments( args ):
                         type=str, default="idle_scan_map.html",
                         help="Write HTML output to the given file.")
 
+    parser.add_argument("-d", "--directory", metavar="OUTPUT_DIR",
+                        type=str, default=None,
+                        help="Where to write all analysis files to.")
+
     parser.add_argument("-r", "--region", metavar="REGION",
                         type=str, help="Region information of source or "
                                        "destination machine (e.g.: CN_R7).")
@@ -345,13 +349,14 @@ def parse_arguments( args ):
 
     return parser.parse_args()
 
-def mkdir_analysis():
+def mkdir_analysis( dirname ):
     """
     Create and return a directory where all created data is stored.
     """
 
-    dt = datetime.datetime.fromtimestamp(time.time())
-    dirname = dt.strftime("%Y-%m-%d_%H:%M:%S")
+    if not dirname:
+        dt = datetime.datetime.fromtimestamp(time.time())
+        dirname = dt.strftime("%Y-%m-%d_%H:%M:%S")
 
     try:
         os.mkdir(dirname)
@@ -368,7 +373,7 @@ def main( ):
 
     args = parse_arguments(sys.argv[0:])
 
-    dirname = mkdir_analysis()
+    dirname = mkdir_analysis(args.directory)
 
     if args.cluster:
         logger.debug("Parsing IP address cluster file `%s'." % args.cluster)
