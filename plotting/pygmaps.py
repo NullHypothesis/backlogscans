@@ -19,8 +19,8 @@ class maps:
     def setgrids(self,slat,elat,latin,slng,elng,lngin):
         self.gridsetting = [slat,elat,latin,slng,elng,lngin]
 
-    def addpoint(self, lat, lng, color = '#FF0000', icon="abc.png"):
-        self.points.append((lat,lng,color[1:],icon))
+    def addpoint(self, lat, lng, color = '#FF0000', icon=None, title="n/a"):
+        self.points.append((lat,lng,color[1:],icon,title))
 
     #def addpointcoord(self, coord):
     #    self.points.append((coord[0],coord[1]))
@@ -80,7 +80,7 @@ class maps:
             self.drawPolyline(f,line,strokeColor = "#000000")
     def drawpoints(self,f):
         for point in  self.points:
-            self.drawpoint(f,point[0],point[1],point[2],point[3])
+            self.drawpoint(f,point[0],point[1],point[2],point[3],point[4])
 
     def drawradpoints(self, f):
         for rpoint in self.radpoints:
@@ -125,13 +125,14 @@ class maps:
 
 
 
-    def drawpoint(self,f,lat,lon,color,icon):
+    def drawpoint(self,f,lat,lon,color,icon,title):
         f.write('\t\tvar latlng = new google.maps.LatLng(%f, %f);\n'%(lat,lon))
         f.write('\t\tvar img = new google.maps.MarkerImage(\'%s\');\n' % (self.coloricon.replace('XXXXXX',color)))
         f.write('\t\tvar marker = new google.maps.Marker({\n')
-        f.write('\t\ttitle: "no implimentation",\n')
-        #f.write('\t\ticon: img,\n')
-        f.write('\t\ticon: "icons/%s",\n' % icon)
+        f.write('\t\ttitle: "%s",\n' % title)
+        f.write('\t\ticon: img,\n')
+        if icon:
+            f.write('\t\ticon: "%s",\n' % icon)
         f.write('\t\tposition: latlng\n')
         f.write('\t\t});\n')
         f.write('\t\tmarker.setMap(map);\n')
