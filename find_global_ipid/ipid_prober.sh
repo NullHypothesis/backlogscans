@@ -7,44 +7,43 @@
 # not know how to deal with CIDR notation.  Use another tool to convert CIDR
 # notation to IP addresses first.
 
-if [ "$#" -ne 1 ]
+if [ "$#" -gt 1 ]
 then
-	echo
-	echo "Usage: $0 IP_ADDRESS_FILE"
-	echo
-	exit 1
+    echo
+    echo "Usage: $0 IP_ADDRESS_FILE"
+    echo
+    exit 1
 fi
 
 # Change this to your needs.
 spoofed_addr="1.2.3.4"
 
 probe_real() {
-	local ip_addr="$1"
+    local ip_addr="$1"
 
-	hping3 -n -s 20000 -p 80 -S -c 1 "$ip_addr" | \
-		grep 'id=' | \
-		sed 's/.*id=\([^ ]\+\).*/\1/'
+	hping3 -n -s $(($RANDOM % 65535)) -p 80 -S -c 1 "$ip_addr" | \
+        grep 'id=' | \
+        sed 's/.*id=\([^ ]\+\).*/\1/'
 }
 
 probe_spoof() {
-	local ip_addr="$1"
+    local ip_addr="$1"
 
-	hping3 -a "$spoofed_addr" -n -s 20000 -p 80 -S -c 1 "$ip_addr" | \
-		grep 'id=' | \
-		sed 's/.*id=\([^ ]\+\).*/\1/'
+    hping3 -a "$spoofed_addr" -n -s $(($RANDOM % 65535)) -p 80 -S -c 1 "$ip_addr" | \
+        grep 'id=' | \
+        sed 's/.*id=\([^ ]\+\).*/\1/'
 }
 
 while read ip_addr
 do
 
-	echo -n "Probing ${ip_addr}: "
+    echo -n "Probing ${ip_addr}: "
 
-	(
-		probe_real "$ip_addr"
-		probe_spoof "$ip_addr"
-		probe_real "$ip_addr"
-		probe_spoof "$ip_addr"
-		probe_real "$ip_addr"
-	) 2>/dev/null | ./analyse_sequence
+    ( probe_real "$ip_addr"
+      #probe_spoof "$ip_addr"
+      probe_real "$ip_addr"
+      #probe_spoof "$ip_addr"
+      probe_real "$ip_addr"
+    ) 2>/dev/null | ./analyse_sequence
 
-done < "$1"
+done < "${1:-/proc/${$}/fd/0}"
