@@ -1,4 +1,11 @@
 #!/bin/bash
+#
+# Start the script as follows:
+# $ sudo ./ipid_prober.sh IP_ADDRESS_LIST
+#
+# The script expects one IP address per line in the given input file.  It does
+# not know how to deal with CIDR notation.  Use another tool to convert CIDR
+# notation to IP addresses first.
 
 if [ "$#" -ne 1 ]
 then
@@ -30,10 +37,14 @@ probe_spoof() {
 while read ip_addr
 do
 
-	probe_real "$ip_addr"
-	probe_spoof "$ip_addr"
-	probe_real "$ip_addr"
-	probe_spoof "$ip_addr"
-	probe_real "$ip_addr"
+	echo -n "Probing ${ip_addr}: "
+
+	(
+		probe_real "$ip_addr"
+		probe_spoof "$ip_addr"
+		probe_real "$ip_addr"
+		probe_spoof "$ip_addr"
+		probe_real "$ip_addr"
+	) 2>/dev/null | ./analyse_sequence
 
 done < "$1"
