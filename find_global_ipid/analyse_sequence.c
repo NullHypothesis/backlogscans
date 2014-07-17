@@ -8,12 +8,12 @@
  * The input is read from stdin.  Every line must be an integer in the
  * range 0 <= n <= 65535.  Examples:
  *
- * $ echo "10\n11\n12\n13" | ./analyse_sequence
+ * $ echo -e "10\n11\n12\n13" | ./analyse_sequence
  * Given IPID sequence likely to be global.
  * $ echo $?
  * 0
  *
- * $ echo "10\n11\n12\n50" | ./analyse_sequence
+ * $ echo -e "10\n11\n12\n50" | ./analyse_sequence
  * Given IPID sequence probably *not* global.
  * $ echo $?
  * 1
@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 #define BUF_SIZE    4096
 
@@ -33,13 +34,13 @@
 
 inline int is_sequential( uint16_t ipid0, uint16_t ipid1 ) {
 
-	if (((uint16_t) (ipid1 - ipid0)) > IPID_DIFF_THRESHOLD) {
-		return 0;
-	} else if (((uint16_t) (ipid1 - ipid0)) == 0) {
-		return 0;
-	} else {
-		return 1;
-	}
+    if (((uint16_t) (ipid1 - ipid0)) > IPID_DIFF_THRESHOLD) {
+        return 0;
+    } else if (((uint16_t) (ipid1 - ipid0)) == 0) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 int main( void ) {
@@ -49,30 +50,42 @@ int main( void ) {
     ssize_t len = 0;
     char *buf = NULL;
     size_t n = BUF_SIZE;
-    int ready = 0;
+    int ipids = 0;
 
-    buf = (char *) malloc((size_t) BUF_SIZE);
+    buf = (char *) calloc(1, (size_t) BUF_SIZE);
     if (buf == NULL) {
-        fprintf(stderr, "Error: malloc() failed.\n");
-        return 2;
+        fprintf(stderr, "error: malloc() failed\n");
+        return 1;
     }
 
     while ((len = getline(&buf, &n, stdin)) != -1) {
+
+        if (strncmp(buf, "\n", 1) == 0) {
+            printf("error: no input\n");
+            return 2;
+        }
 
         crnt_val  = (uint16_t) atoi(buf);
 
         printf("%hu, ", crnt_val);
 
-        if (ready && !is_sequential(prev_val, crnt_val)) {
+        if (ipids && !is_sequential(prev_val, crnt_val)) {
             printf("non-global\n");
-            return 1;
+            return 3;
         }
 
         prev_val = crnt_val;
-        ready = 1;
+        ipids++;
     }
 
-    printf("global\n");
-
-    return 0;
+    if (ipids > 1) {
+        printf("global\n");
+        return 0;
+    } else if (ipids == 1) {
+        printf("error: not enough ipids\n");
+        return 4;
+    } else {
+        printf("error: no input\n");
+        return 5;
+    }
 }
