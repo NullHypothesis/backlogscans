@@ -61,8 +61,10 @@ int main( void ) {
 
         crnt_val  = (uint16_t) atoi(buf);
 
+        printf("%hu, ", crnt_val);
+
         if (ready && !is_sequential(prev_val, crnt_val)) {
-            printf("Given IPID sequence probably *not* global.\n");
+            printf("non-global\n");
             return 1;
         }
 
@@ -70,7 +72,7 @@ int main( void ) {
         ready = 1;
     }
 
-    printf("Given IPID sequence likely to be global.\n");
+    printf("global\n");
 
     return 0;
 }
