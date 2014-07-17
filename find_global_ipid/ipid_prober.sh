@@ -40,9 +40,9 @@ do
     echo -n "Probing ${ip_addr}: "
 
     ( probe_real "$ip_addr"
-      #probe_spoof "$ip_addr"
+      probe_spoof "$ip_addr"
       probe_real "$ip_addr"
-      #probe_spoof "$ip_addr"
+      probe_spoof "$ip_addr"
       probe_real "$ip_addr"
     ) 2>/dev/null | ./analyse_sequence
 
