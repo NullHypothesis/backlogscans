@@ -3,7 +3,8 @@ Overview
 
 This repository contains a set of scripts which implement a number of TCP-based
 network measurement tests.  These tests were written for a [research
-project analysing the Great Firewall of China](http://cs.unm.edu/~royaen/gfw/).
+project analysing the Great Firewall of
+China](http://cs.unm.edu/~royaen/projects/gfw/).
 In particular, the following tests are supported.
 
  * TCP backlog scan which probes a Linux machine's SYN backlog in order to
